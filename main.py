@@ -16,6 +16,8 @@ class GameWindow(pyglet.window.Window):
 		self.right = False
 		self.left = False
 		self.player_speed = 300 
+		self.fire = False
+		self.player_fire_rate = 0
 
 		player_spr = pyglet.sprite.Sprite(preload_image('Carrot.png'))
 		self.player = GameObject(500, 100, 0, 0, player_spr)
@@ -35,7 +37,8 @@ class GameWindow(pyglet.window.Window):
 		if symbol == key.LEFT:
 			self.left = True
 		if symbol == key.SPACE:
-			self.player_laser_list.append(GameObject(self.player.posx, self.player.posy, 0, 0, Sprite(self.player_laser)))
+			self.fire = True
+			#self.player_laser_list.append(GameObject(self.player.posx, self.player.posy, 0, 0, Sprite(self.player_laser)))
 		if symbol == key.ESCAPE:
 			pyglet.app.exit()
 
@@ -44,6 +47,8 @@ class GameWindow(pyglet.window.Window):
 			self.right = False
 		if symbol == key.LEFT:
 			self.left = False
+		if symbol == key.SPACE:
+			self.fire = False
 	def on_draw(self):
 		self.clear()
 		for grass in self.grass_list:
@@ -60,10 +65,23 @@ class GameWindow(pyglet.window.Window):
 			self.player.posx += self.player_speed * dt
 		if self.left and self.player.posx > 100:
 			self.player.posx -= self.player_speed * dt
+
+	def update_player_laser(self,dt):
+		for lsr in self.player_laser_list:
+			lsr.update(dt)
+			lsr.posy += 400 * dt
+			if lsr.posy > 700:
+				self.player_laser_list.remove(lsr)
+
+	def player_fire(self,dt):
+		self.player_fire_rate -= dt
+		if self.player_fire_rate <=0:	
+			self.player_laser_list.append(GameObject(self.player.posx, self.player.posy + 76, 0, 0, Sprite(self.player_laser)))
+			self.player_fire_rate += 0.2
+			
 	
 	def update_space(self,dt):
 		first_grass = self.grass_list[0]
-		print(first_grass.posy)
 		if first_grass.posy <= -975:
 			first_grass = self.grass_list.pop(0)
 			last_grass = self.grass_list[-1]
@@ -78,7 +96,12 @@ class GameWindow(pyglet.window.Window):
 
 	def update(self, dt):
 		self.update_player(dt)
+		if self.fire:
+			self.player_fire(dt)
+
+		self.update_player_laser(dt)
 		self.update_space(dt)
+
 		
 		
 
